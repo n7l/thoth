@@ -16,7 +16,7 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 BASE_DIR = Path(__file__).resolve().parent
 CREDENTIALS_PATH = BASE_DIR / "credentials.json"
 TOKEN_PATH = BASE_DIR / "token.json"
-TEST_MODE = True
+TEST_MODE = False
 
 
 def authenticate():
@@ -50,6 +50,9 @@ def list_messages(service, user_id="me"):
         if not TEST_MODE:
             while "nextPageToken" in response:
                 page_token = response["nextPageToken"]
+                print(
+                    f"Getting messages... Page: {page_token} Count: {len(response['messages'])}"
+                )
                 response = (
                     service.users()
                     .messages()
@@ -65,7 +68,7 @@ def list_messages(service, user_id="me"):
 
 
 def get_message(service, msg_id, user_id="me"):
-    """Get a Message with given ID."""
+    """Get a Message with given ID, including labels."""
     try:
         message = (
             service.users()
@@ -84,12 +87,21 @@ def get_message(service, msg_id, user_id="me"):
             (header["value"] for header in headers if header["name"] == "From"),
             "Unknown Sender",
         )
-        date = next(
-            (header["value"] for header in headers if header["name"] == "Date"),
-            "Unknown Date",
+        recipient = next(
+            (header["value"] for header in headers if header["name"] == "To"), None
         )
-        body = "No body available"
+        date = next(
+            (header["value"] for header in headers if header["name"] == "Date"), None
+        )
 
+        # Convert date to datetime object
+        from email.utils import parsedate_to_datetime
+
+        if date:
+            date = parsedate_to_datetime(date)
+
+        # Email body
+        body = "No body available"
         if "parts" in payload:
             for part in payload["parts"]:
                 if part["mimeType"] == "text/plain" and "data" in part["body"]:
@@ -99,13 +111,18 @@ def get_message(service, msg_id, user_id="me"):
         elif "body" in payload and "data" in payload["body"]:
             body = base64.urlsafe_b64decode(payload["body"]["data"]).decode("utf-8")
 
-        # print(f"From: {sender}")
-        # print(f"Subject: {subject}")
-        # print(f"Date: {date}")
-        # print(f"Body:\n{body}")
-        # print("-" * 50)
+        # Email labels
+        labels = message.get("labelIds", [])
 
-        return {"from": sender, "subject": subject, "date": date, "body": body}
+        return {
+            "message_id": msg_id,
+            "sender": sender,
+            "recipient": recipient.split(", ") if recipient else [],
+            "subject": subject,
+            "body": body,
+            "date": date,
+            "labels": labels,
+        }
     except Exception as error:
         print(f"An error occurred: {error}")
         return None
@@ -123,41 +140,39 @@ def connect_to_db():
     return conn
 
 
+from psycopg2.extras import execute_values
+
+
 def save_emails_to_db(emails):
     """Save a list of emails to the database."""
     conn = connect_to_db()
     cursor = conn.cursor()
 
-    # Insert query
-    # INSERT INTO emails (message_id, sender, recipient, subject, body, date, labels)
     query = """
-    INSERT INTO emails (message_id, sender, subject, body, date)
+    INSERT INTO email (message_id, sender, recipient, subject, body, date, labels)
     VALUES %s
-    ON CONFLICT (message_id) DO NOTHING;  -- Skip duplicates
+    ON CONFLICT (message_id) DO UPDATE
+    SET sender = EXCLUDED.sender,
+        recipient = EXCLUDED.recipient,
+        subject = EXCLUDED.subject,
+        body = EXCLUDED.body,
+        date = EXCLUDED.date,
+        labels = EXCLUDED.labels;
     """
-    email_data = []
-    for email_ in emails:
-        breakpoint()
-        if email_["date"] == "Unknown Date":
-            dt = None
-        else:
-            dt = parsedate_to_datetime(email_["date"])
 
-        # Prepare data for insertion
-        email_data.append(
-            (
-                email_["id"],
-                email_["from"],
-                # email_['recipient'],  # Expecting a list
-                email_["subject"],
-                email_["body"],
-                # email_['date'],
-                dt,
-                # email_['labels']      # Expecting a list
-            )
+    email_data = [
+        (
+            email["message_id"],
+            email["sender"],
+            email["recipient"],  # Expecting a list
+            email["subject"],
+            email["body"],
+            email["date"],
+            email["labels"],  # Expecting a list
         )
+        for email in emails
+    ]
 
-    # Use execute_values for efficient bulk insert
     execute_values(cursor, query, email_data)
     conn.commit()
     cursor.close()
@@ -175,8 +190,8 @@ def main():
     print(f"Total messages: {len(messages)}")
 
     # Create a directory to save emails
-    email_dir = BASE_DIR / "emails"
-    email_dir.mkdir(exist_ok=True)
+    # email_dir = BASE_DIR / "emails"
+    # email_dir.mkdir(exist_ok=True)
 
     emails = []
     for index, msg in enumerate(messages):
