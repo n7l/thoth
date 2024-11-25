@@ -8,3 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+
+emails/
+credentials.json
+token.json
