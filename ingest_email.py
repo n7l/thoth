@@ -8,6 +8,8 @@ from psycopg2.extras import execute_values
 import psycopg2
 from email.utils import parsedate_to_datetime
 
+from database import connect_to_db
+
 # Define the scope
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
@@ -123,11 +125,6 @@ def get_message(service, msg_id, user_id="me"):
     except Exception as error:
         print(f"An error occurred: {error}")
         return None
-
-
-def connect_to_db():
-    """Connect to the PostgreSQL database."""
-    return psycopg2.connect(**DB_CONFIG)
 
 
 def save_emails_to_db_in_chunks(emails, chunk_size=100):

@@ -1,22 +1,21 @@
 import json
+from pathlib import Path
 import psycopg2
 from psycopg2.extras import execute_batch
 from send2trash import send2trash
-
-# Database configuration
-DB_CONFIG = {
-    "dbname": "thoth",
-    "user": "postgres",
-    "password": "postgres",
-    "host": "localhost",
-    "port": 5432,
-}
+from database import connect_to_db
 
 
 # Insert or update tabs in the database
 def ingest_tabs(json_file_path):
+
+    file_path = Path(json_file_path)
+    if not file_path.exists():
+        print(f"Error: File '{json_file_path}' does not exist.")
+        return
+
     # Connect to the database
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_db()
     cursor = conn.cursor()
 
     # Open and parse the JSON file
@@ -53,7 +52,7 @@ def ingest_tabs(json_file_path):
 
 # Query all tabs from the database
 def query_tabs():
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_db()
     cursor = conn.cursor()
 
     # Fetch all tabs
