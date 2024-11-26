@@ -14,12 +14,19 @@ CREATE TABLE email (
 
 
 DROP TABLE IF EXISTS tab;
-CREATE TABLE tab (
+DROP TABLE IF EXISTS tab_group;
+
+CREATE TABLE tab_group (
     id SERIAL PRIMARY KEY,
-    tab_id INTEGER UNIQUE NOT NULL,
-    title TEXT NOT NULL,
-    url TEXT NOT NULL,
-    favicon_url TEXT
+    name TEXT NOT NULL,
+    tags TEXT[] NOT NULL
 );
 
-SELECT pg_size_pretty(pg_total_relation_size('email')) AS total_size;
+CREATE TABLE tab (
+    id SERIAL PRIMARY KEY,
+    tab_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    favicon_url TEXT,
+    group_id INTEGER REFERENCES tab_group(id) ON DELETE SET NULL
+);

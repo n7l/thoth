@@ -1,0 +1,108 @@
+[
+  {
+    "id": 529884961,
+    "title": "DIM - Inventory",
+    "url": "https://app.destinyitemmanager.com/4611686018455317726/d2/inventory",
+    "favIconUrl": "https://app.destinyitemmanager.com/favicon.ico"
+  },
+  {
+    "id": 529884962,
+    "title": "offline // FOUNDRY",
+    "url": "https://d2foundry.gg/w/2720651699?p=0,0,0,0&m=0&mw=0",
+    "favIconUrl": "https://d2foundry.gg/favicon.ico"
+  },
+  {
+    "id": 529884963,
+    "title": "DIM - Loadout Optimizer",
+    "url": "https://app.destinyitemmanager.com/4611686018455317726/d2/optimizer",
+    "favIconUrl": "https://app.destinyitemmanager.com/favicon.ico"
+  },
+  {
+    "id": 529884965,
+    "title": "What are the best hip-fire guns now? : r/CrucibleGuidebook",
+    "url": "https://www.reddit.com/r/CrucibleGuidebook/comments/10vfb85/what_are_the_best_hipfire_guns_now/",
+    "favIconUrl": "https://www.redditstatic.com/shreddit/assets/favicon/64x64.png"
+  },
+  {
+    "id": 529884966,
+    "title": "(1602) Legoleflash - YouTube",
+    "url": "https://www.youtube.com/@Legoleflash",
+    "favIconUrl": "https://www.youtube.com/s/desktop/422e7d54/img/logos/favicon_32x32.png"
+  },
+  {
+    "id": 529884967,
+    "title": "(1601) CRAFT THIS Zealot's Reward 20 METER Fusion Rifle - YouTube",
+    "url": "https://www.youtube.com/watch?v=Lw5IkAE3zSg",
+    "favIconUrl": "https://www.youtube.com/s/desktop/422e7d54/img/logos/favicon_32x32.png"
+  },
+  {
+    "id": 529890138,
+    "title": "Extensions - THOTH",
+    "url": "chrome://extensions/?id=lmaeeidpkiojgjncekmodcclijglhdnf",
+    "favIconUrl": ""
+  },
+  {
+    "id": 529890145,
+    "title": "Potrace",
+    "url": "https://potrace.sourceforge.net/"
+  },
+  {
+    "id": 529890156,
+    "title": "Pin icon PNG and SVG Vector Free Download",
+    "url": "https://uxwing.com/pin-icon/",
+    "favIconUrl": "https://uxwing.com/wp-content/themes/uxwing/images/favicon.png"
+  },
+  {
+    "id": 529890169,
+    "title": "lightweight orm for python at DuckDuckGo",
+    "url": "https://duckduckgo.com/?q=lightweight+orm+for+python&atb=v396-1&ia=web",
+    "favIconUrl": "https://duckduckgo.com/favicon.ico"
+  },
+  {
+    "id": 529890172,
+    "title": "GitHub - coleifer/peewee: a small, expressive orm -- supports postgresql, mysql, sqlite and cockroachdb",
+    "url": "https://github.com/coleifer/peewee",
+    "favIconUrl": "https://github.githubassets.com/favicons/favicon-dark.svg"
+  },
+  {
+    "id": 529890175,
+    "title": "The best ORMs for database-powered Python apps | InfoWorld",
+    "url": "https://www.infoworld.com/article/2335270/6-orms-for-every-database-powered-python-app.html",
+    "favIconUrl": "https://www.infoworld.com/wp-content/themes/iw-b2b-child-theme/src/static/img/favicon.ico"
+  },
+  {
+    "id": 529890178,
+    "title": "Peewee: A Lightweight ORM for Python Developers 🪶 | by Manoj Das | Medium",
+    "url": "https://medium.com/@HeCanThink/peewee-a-lightweight-orm-for-python-developers-953e84c66cc4",
+    "favIconUrl": "https://miro.medium.com/v2/5d8de952517e8160e40ef9841c781cdc14a5db313057fa3c3de41c6f5b494b19"
+  },
+  {
+    "id": 529890181,
+    "title": "PonyORM - Python ORM with beautiful query syntax",
+    "url": "https://ponyorm.org/"
+  },
+  {
+    "id": 529890187,
+    "title": "(1601) YouTube",
+    "url": "https://www.youtube.com/",
+    "favIconUrl": "https://www.youtube.com/s/desktop/ef2da63d/img/logos/favicon_32x32.png"
+  },
+  {
+    "id": 529890197,
+    "title": "Prisma Client Python",
+    "url": "https://prisma-client-py.readthedocs.io/en/stable/",
+    "favIconUrl": "https://prisma-client-py.readthedocs.io/en/stable/favicon.png"
+  },
+  {
+    "id": 529890200,
+    "title": "Prisma | Simplify working and interacting with databases",
+    "url": "https://www.prisma.io/",
+    "favIconUrl": "https://www.prisma.io/images/favicon-32x32.png"
+  },
+  {
+    "id": 529890203,
+    "title": "GitHub - prisma/prisma: Next-generation ORM for Node.js & TypeScript | PostgreSQL, MySQL, MariaDB, SQL Server, SQLite, MongoDB and CockroachDB",
+    "url": "https://github.com/prisma/prisma",
+    "favIconUrl": "https://github.githubassets.com/favicons/favicon-dark.svg"
+  }
+]
