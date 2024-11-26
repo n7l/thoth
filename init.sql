@@ -1,9 +1,6 @@
 -- CREATE DATABASE thoth;
 
--- Drop the table if it already exists
 DROP TABLE IF EXISTS emails;
-
--- Create the email table
 CREATE TABLE email (
     id SERIAL PRIMARY KEY,             -- Unique ID for the email (auto-incremented)
     message_id TEXT UNIQUE NOT NULL,   -- Unique message identifier from Gmail
@@ -15,5 +12,14 @@ CREATE TABLE email (
     labels TEXT[]                      -- Labels associated with the email (array)
 );
 
+
+DROP TABLE IF EXISTS tab;
+CREATE TABLE tab (
+    id SERIAL PRIMARY KEY,
+    tab_id INTEGER UNIQUE NOT NULL,
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    favicon_url TEXT
+);
 
 SELECT pg_size_pretty(pg_total_relation_size('email')) AS total_size;

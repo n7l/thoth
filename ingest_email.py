@@ -1,12 +1,11 @@
 import base64
-import email
 from pathlib import Path
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-import psycopg2
 from psycopg2.extras import execute_values
+import psycopg2
 from email.utils import parsedate_to_datetime
 
 # Define the scope
@@ -16,7 +15,15 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 BASE_DIR = Path(__file__).resolve().parent
 CREDENTIALS_PATH = BASE_DIR / "credentials.json"
 TOKEN_PATH = BASE_DIR / "token.json"
-TEST_MODE = False
+
+# Database connection details
+DB_CONFIG = {
+    "dbname": "thoth",
+    "user": "postgres",
+    "password": "postgres",
+    "host": "localhost",
+    "port": 5432,
+}
 
 
 def authenticate():
@@ -40,35 +47,27 @@ def authenticate():
     return build("gmail", "v1", credentials=creds)
 
 
-def list_messages(service, user_id="me"):
-    """List all messages from the user's mailbox."""
+def list_messages(service, user_id="me", page_token=None, since_date=None):
+    """List messages incrementally, optionally filtered by a since_date."""
     try:
-        response = service.users().messages().list(userId=user_id).execute()
-        messages = []
-        if "messages" in response:
-            messages.extend(response["messages"])
-        if not TEST_MODE:
-            while "nextPageToken" in response:
-                page_token = response["nextPageToken"]
-                print(
-                    f"Getting messages... Page: {page_token} Count: {len(response['messages'])}"
-                )
-                response = (
-                    service.users()
-                    .messages()
-                    .list(userId=user_id, pageToken=page_token)
-                    .execute()
-                )
-                if "messages" in response:
-                    messages.extend(response["messages"])
-        return messages
+        query = f"after:{since_date}" if since_date else None
+        response = (
+            service.users()
+            .messages()
+            .list(userId=user_id, q=query, pageToken=page_token)
+            .execute()
+        )
+
+        messages = response.get("messages", [])
+        next_page_token = response.get("nextPageToken", None)
+        return messages, next_page_token
     except Exception as error:
         print(f"An error occurred: {error}")
-        return None
+        return None, None
 
 
 def get_message(service, msg_id, user_id="me"):
-    """Get a Message with given ID, including labels."""
+    """Get a message with its details."""
     try:
         message = (
             service.users()
@@ -95,8 +94,6 @@ def get_message(service, msg_id, user_id="me"):
         )
 
         # Convert date to datetime object
-        from email.utils import parsedate_to_datetime
-
         if date:
             date = parsedate_to_datetime(date)
 
@@ -130,21 +127,11 @@ def get_message(service, msg_id, user_id="me"):
 
 def connect_to_db():
     """Connect to the PostgreSQL database."""
-    conn = psycopg2.connect(
-        dbname="thoth",
-        user="postgres",
-        password="postgres",
-        host="localhost",
-        port=5432,
-    )
-    return conn
+    return psycopg2.connect(**DB_CONFIG)
 
 
-from psycopg2.extras import execute_values
-
-
-def save_emails_to_db(emails):
-    """Save a list of emails to the database."""
+def save_emails_to_db_in_chunks(emails, chunk_size=100):
+    """Save a list of emails to the database in manageable chunks."""
     conn = connect_to_db()
     cursor = conn.cursor()
 
@@ -160,55 +147,56 @@ def save_emails_to_db(emails):
         labels = EXCLUDED.labels;
     """
 
-    email_data = [
-        (
-            email["message_id"],
-            email["sender"],
-            email["recipient"],  # Expecting a list
-            email["subject"],
-            email["body"],
-            email["date"],
-            email["labels"],  # Expecting a list
-        )
-        for email in emails
-    ]
-
-    execute_values(cursor, query, email_data)
-    conn.commit()
+    for i in range(0, len(emails), chunk_size):
+        chunk = emails[i : i + chunk_size]
+        email_data = [
+            (
+                email["message_id"],
+                email["sender"],
+                email["recipient"],
+                email["subject"],
+                email["body"],
+                email["date"],
+                email["labels"],
+            )
+            for email in chunk
+        ]
+        execute_values(cursor, query, email_data)
+        conn.commit()
+        print(f"Saved {min(i + chunk_size, len(emails))} of {len(emails)} emails.")
     cursor.close()
     conn.close()
 
 
-def main():
-    """Main function to download all emails."""
+def main(since_date=None):
+    """Main function to fetch and save emails incrementally."""
     service = authenticate()
-    messages = list_messages(service)
-    if not messages:
-        print("No messages found.")
-        return
+    next_page_token = None
 
-    print(f"Total messages: {len(messages)}")
+    while True:
+        print(f"Fetching emails... (since {since_date})")
+        messages, next_page_token = list_messages(
+            service, page_token=next_page_token, since_date=since_date
+        )
+        if not messages:
+            print("No more messages to process.")
+            break
 
-    # Create a directory to save emails
-    # email_dir = BASE_DIR / "emails"
-    # email_dir.mkdir(exist_ok=True)
+        emails = []
+        for msg in messages:
+            email_data = get_message(service, msg["id"])
+            if email_data:
+                emails.append(email_data)
 
-    emails = []
-    for index, msg in enumerate(messages):
-        email_data = get_message(service, msg["id"])
-        if email_data:
-            email_data["id"] = msg["id"]
-            emails.append(email_data)
-            # breakpoint()
-            # email_file = email_dir / f"email_{index + 1}.txt"
-            # with email_file.open("w") as file:
-            #     file.write(f"From: {email_data['from']}\n")
-            #     file.write(f"Subject: {email_data['subject']}\n")
-            #     file.write(f"Date: {email_data['date']}\n\n")
-            #     file.write(email_data["body"])
+        print(emails[0]["date"])
+        save_emails_to_db_in_chunks(emails)
 
-    save_emails_to_db(emails)
+        if not next_page_token:
+            print("All emails processed.")
+            break
 
 
 if __name__ == "__main__":
-    main()
+    # Specify a date in YYYY-MM-DD format to filter emails
+    SINCE_DATE = "1990-01-01"  # Example date
+    main(since_date=SINCE_DATE)

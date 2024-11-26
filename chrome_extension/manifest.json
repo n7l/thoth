@@ -2,8 +2,8 @@
     "manifest_version": 3,
     "name": "THOTH",
     "version": "1.0",
-    "description": "Collects information about open tabs.",
-    "permissions": ["tabs"],
+    "description": "Collects information about open tabs and saves them to a JSON file.",
+    "permissions": ["tabs", "downloads"],
     "host_permissions": ["<all_urls>"],
     "action": {
       "default_popup": "popup.html",
@@ -12,8 +12,5 @@
         "48": "pin-icon.png",
         "128": "pin-icon.png"
       }
-    },
-    "background": {
-      "service_worker": "background.js"
     }
   }
