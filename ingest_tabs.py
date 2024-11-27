@@ -52,64 +52,79 @@ def parse_file(file_path):
     return [], [{"id": i + 1, "title": url, "url": url} for i, url in enumerate(urls)]
 
 
-# Insert or update tabs and groups
-def ingest_file(file_path):
-    file_path = Path(file_path)
-    if not file_path.exists():
-        print(f"Error: File '{file_path}' does not exist.")
-        return
+import glob
+from pathlib import Path
 
-    groups, tabs = parse_file(file_path)
 
-    # Connect to the database
-    conn = connect_to_db()
-    cursor = conn.cursor()
+def ingest_file(file_path=None):
+    # If no file_path is specified, find all matching files in Downloads
+    if file_path is None:
+        files = glob.glob("/Users/nat/Downloads/tabs*.json")
+        if not files:
+            print("No matching files found in /Users/nat/Downloads/")
+            return
+        files.sort()  # Sort to process files in order (optional)
+    else:
+        files = [file_path]
 
-    # Insert or update groups
-    group_ids = {}
-    if groups:
-        group_query = """
-        INSERT INTO tab_group (name, tags)
-        VALUES (%s, %s)
-        ON CONFLICT (name)
-        DO UPDATE SET tags = EXCLUDED.tags
-        RETURNING id
+    for file in files:
+        path = Path(file)
+        if not path.exists():
+            print(f"File does not exist: {path}")
+            continue
+
+        print(f"Processing file: {path}")
+        groups, tabs = parse_file(path)
+
+        # Connect to the database and process tabs/groups
+        conn = connect_to_db()
+        cursor = conn.cursor()
+
+        # Insert or update groups
+        group_ids = {}
+        if groups:
+            group_query = """
+            INSERT INTO tab_group (name, tags)
+            VALUES (%s, %s)
+            ON CONFLICT (name)
+            DO UPDATE SET tags = EXCLUDED.tags
+            RETURNING id
+            """
+            for group in groups:
+                cursor.execute(group_query, (group["name"], group.get("tags", [])))
+                group_ids[group["name"]] = cursor.fetchone()[0]
+
+        # Insert or update tabs
+        tab_query = """
+        INSERT INTO tab (tab_id, title, url, favicon_url, group_id)
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (tab_id)
+        DO UPDATE SET
+            title = EXCLUDED.title,
+            url = EXCLUDED.url,
+            favicon_url = EXCLUDED.favicon_url,
+            group_id = EXCLUDED.group_id
         """
-        for group in groups:
-            cursor.execute(group_query, (group["name"], group.get("tags", [])))
-            group_ids[group["name"]] = cursor.fetchone()[0]
+        tab_data = [
+            (
+                tab["id"],
+                tab["title"],
+                tab["url"],
+                tab.get("favIconUrl"),
+                group_ids.get(tab.get("group")),
+            )
+            for tab in tabs
+        ]
+        execute_batch(cursor, tab_query, tab_data)
 
-    # Insert or update tabs
-    tab_query = """
-    INSERT INTO tab (tab_id, title, url, favicon_url, group_id)
-    VALUES (%s, %s, %s, %s, %s)
-    ON CONFLICT (tab_id)
-    DO UPDATE SET
-        title = EXCLUDED.title,
-        url = EXCLUDED.url,
-        favicon_url = EXCLUDED.favicon_url,
-        group_id = EXCLUDED.group_id
-    """
-    tab_data = [
-        (
-            tab["id"],
-            tab["title"],
-            tab["url"],
-            tab.get("favIconUrl"),
-            group_ids.get(tab.get("group")),
-        )
-        for tab in tabs
-    ]
-    execute_batch(cursor, tab_query, tab_data)
+        conn.commit()
+        cursor.close()
+        conn.close()
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+        if not config.TEST_MODE:
+            send2trash(str(file_path))
 
-    if not config.TEST_MODE:
-        send2trash(str(file_path))
-
-    print(f"Ingested {len(tabs)} tabs and moved '{file_path}' to the trash.")
+        print(f"Ingested {len(tabs)} tabs and moved '{path}' to the trash.")
 
 
 # Query all tabs and their groups
