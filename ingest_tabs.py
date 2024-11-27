@@ -1,13 +1,30 @@
 import json
 from pathlib import Path
-import psycopg2
+import subprocess
 from psycopg2.extras import execute_batch
 from send2trash import send2trash
 from database import connect_to_db
-import webbrowser
+import config
 
 
-TEST_MODE = True
+def run_applescript(applescript):
+    return str(subprocess.check_output(f"osascript -e '{applescript}'", shell=True))
+
+
+def open_urls(urls):
+    # subprocess.check_output(["git", "status"]
+    subprocess.run(
+        ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "--new-window"]
+        + urls
+    )
+
+    run_applescript(
+        """
+    tell application "Google Chrome"
+        activate
+    end tell
+    """
+    )
 
 
 # Function to parse file content
@@ -89,7 +106,7 @@ def ingest_file(file_path):
     cursor.close()
     conn.close()
 
-    if not TEST_MODE:
+    if not config.TEST_MODE:
         send2trash(str(file_path))
 
     print(f"Ingested {len(tabs)} tabs and moved '{file_path}' to the trash.")
@@ -134,10 +151,7 @@ def open_tab_group(group_name):
         return
 
     print(f"Opening tabs for group '{group_name}':")
-    for row in rows:
-        url = row[0]
-        print(f"- {url}")
-        webbrowser.open(url)
+    open_urls([row[0] for row in rows])
 
     cursor.close()
     conn.close()
