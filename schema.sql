@@ -24,7 +24,7 @@ CREATE TABLE tab_group (
 
 CREATE TABLE tab (
     id SERIAL PRIMARY KEY,
-    tab_id INTEGER NOT NULL,
+    tab_id INTEGER UNIQUE NOT NULL,
     title TEXT NOT NULL,
     url TEXT NOT NULL,
     favicon_url TEXT,
