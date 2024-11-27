@@ -4,6 +4,7 @@ import psycopg2
 from psycopg2.extras import execute_batch
 from send2trash import send2trash
 from database import connect_to_db
+import webbrowser
 
 
 TEST_MODE = True
@@ -115,6 +116,33 @@ def query_tabs_with_groups():
     conn.close()
 
 
+def open_tab_group(group_name):
+    conn = connect_to_db()
+    cursor = conn.cursor()
+
+    query = """
+    SELECT t.url
+    FROM tab t
+    JOIN tab_group g ON t.group_id = g.id
+    WHERE g.name = %s
+    """
+    cursor.execute(query, (group_name,))
+    rows = cursor.fetchall()
+
+    if not rows:
+        print(f"No tabs found for group '{group_name}'.")
+        return
+
+    print(f"Opening tabs for group '{group_name}':")
+    for row in rows:
+        url = row[0]
+        print(f"- {url}")
+        webbrowser.open(url)
+
+    cursor.close()
+    conn.close()
+
+
 if __name__ == "__main__":
     import sys
 
@@ -127,3 +155,5 @@ if __name__ == "__main__":
 
     # print("\nTabs with their groups in the database:")
     # query_tabs_with_groups()
+
+    open_tab_group("music")
