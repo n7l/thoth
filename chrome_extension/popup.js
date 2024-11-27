@@ -28,15 +28,36 @@ function displayTabs(tabs) {
   });
 }
 
-// Save tab data to a JSON file
+// Save tabs and group to a JSON file
 function saveTabsToJson() {
-    console.log("creating blob");
+  const groupName = document.getElementById('group-name').value.trim();
+  if (!groupName) {
+    alert("Please enter a group name.");
+    return;
+  }
+
   if (tabsData.length === 0) {
     alert("No tab data available to save. Fetch tabs first!");
     return;
   }
 
-  const blob = new Blob([JSON.stringify(tabsData, null, 2)], { type: 'application/json' });
+  const jsonData = {
+    groups: [
+      {
+        name: groupName,
+        tags: [] // You can allow the user to add tags here in the future
+      }
+    ],
+    tabs: tabsData.map(tab => ({
+      id: tab.id,
+      title: tab.title,
+      url: tab.url,
+      favIconUrl: tab.favIconUrl,
+      group: groupName
+    }))
+  };
+
+  const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 
   chrome.downloads.download({

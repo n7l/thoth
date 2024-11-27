@@ -18,7 +18,7 @@ DROP TABLE IF EXISTS tab_group;
 
 CREATE TABLE tab_group (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
+    name TEXT UNIQUE NOT NULL,
     tags TEXT[] NOT NULL
 );
 

@@ -1,0 +1,59 @@
+{
+  "groups": [
+    {
+      "name": "music",
+      "tags": []
+    }
+  ],
+  "tabs": [
+    {
+      "id": 529884863,
+      "title": "Fireface UCX II | Advanced USB Audio Interface - rme-usa.com",
+      "url": "https://www.rme-usa.com/fireface-ucx-ii.html",
+      "favIconUrl": "https://www.rme-usa.com/files/layout/img/favicon.ico",
+      "group": "music"
+    },
+    {
+      "id": 529884864,
+      "title": "Amazon.com: Universal Audio Apollo X8 Thunderbolt 3 Audio Interface : Everything Else",
+      "url": "https://www.amazon.com/Universal-Audio-Apollo-Thunderbolt-Interface/dp/B07H1CDWJZ?ref_=ast_sto_dp&th=1",
+      "favIconUrl": "https://www.amazon.com/favicon.ico",
+      "group": "music"
+    },
+    {
+      "id": 529884865,
+      "title": "Arturia - AudioFuse 16Rig",
+      "url": "https://www.arturia.com/products/audio/audiofuse-16rig/overview",
+      "favIconUrl": "https://www.arturia.com/icons/production.png",
+      "group": "music"
+    },
+    {
+      "id": 529884866,
+      "title": "Songwriting with Brian Eno – School of Song",
+      "url": "https://schoolofsong.org/products/songwriting-with-brian-eno",
+      "favIconUrl": "https://schoolofsong.org/cdn/shop/files/SOS_house_no_text.jpg?crop=center&height=32&v=1660678888&width=32",
+      "group": "music"
+    },
+    {
+      "id": 529884867,
+      "title": "Unique Download Link | WeTransfer",
+      "url": "https://wetransfer.com/downloads/236bad44ecdee9d45c6b4a951560df6f20241117183649/34bf17?t_exp=1732127809&t_lsid=ad876ffa-24ca-4e48-afb6-588f156e453e&t_network=link&t_rid=YXV0aDB8VHJhbnNmZXJ8cWFha3RnMDVvMGM1Z2k=&t_s=download_link&t_ts=1731868610",
+      "favIconUrl": "https://wetransfer.com/favicon.ico",
+      "group": "music"
+    },
+    {
+      "id": 529884868,
+      "title": "Victor Drouin-Trempe - D.evices M4L",
+      "url": "https://v-ictor.ca/devices-m4l",
+      "favIconUrl": "https://cdn.myportfolio.com/ea29dae2-fbac-4f40-aa7c-620894302d54/f3144fa2-cb95-4fb0-b788-0b29f36c1018_carw_1x1x32.png?h=451c8495630959f967a2c80fa656811a",
+      "group": "music"
+    },
+    {
+      "id": 529884869,
+      "title": "Amazon.com Shopping Cart",
+      "url": "https://www.amazon.com/gp/cart/view.html?ref_=nav_cart",
+      "favIconUrl": "https://www.amazon.com/favicon.ico",
+      "group": "music"
+    }
+  ]
+}

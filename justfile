@@ -1,5 +1,5 @@
 tabs:
-    uv run python ingest_tabs.py ~/Downloads/tabs.json
+    uv run python ingest_tabs.py ./tests/data/tabs_3.json
 
 
 models:
