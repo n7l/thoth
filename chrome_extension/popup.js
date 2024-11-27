@@ -1,9 +1,8 @@
 let tabsData = [];
 
-// Fetch tabs from the current window or all windows
-function fetchTabs(currentWindow) {
-  const queryOptions = currentWindow ? { currentWindow: true } : {};
-  chrome.tabs.query(queryOptions, (tabs) => {
+// Fetch tabs from the current window automatically
+function fetchCurrentWindowTabs() {
+  chrome.tabs.query({ currentWindow: true }, (tabs) => {
     tabsData = tabs.map(tab => ({
       id: tab.id,
       title: tab.title,
@@ -28,32 +27,17 @@ function displayTabs(tabs) {
   });
 }
 
-// Save tabs and group to a JSON file
+// Save tabs and group (if provided) to a JSON file
 function saveTabsToJson() {
   const groupName = document.getElementById('group-name').value.trim();
-  if (!groupName) {
-    alert("Please enter a group name.");
-    return;
-  }
-
-  if (tabsData.length === 0) {
-    alert("No tab data available to save. Fetch tabs first!");
-    return;
-  }
-
   const jsonData = {
-    groups: [
-      {
-        name: groupName,
-        tags: [] // You can allow the user to add tags here in the future
-      }
-    ],
+    groups: groupName ? [{ name: groupName, tags: [] }] : [],
     tabs: tabsData.map(tab => ({
       id: tab.id,
       title: tab.title,
       url: tab.url,
       favIconUrl: tab.favIconUrl,
-      group: groupName
+      group: groupName || null
     }))
   };
 
@@ -62,12 +46,29 @@ function saveTabsToJson() {
 
   chrome.downloads.download({
     url: url,
-    filename: 'tabs.json',
+    filename: groupName ? `${groupName}_tabs.json` : 'tabs.json',
     saveAs: true
   });
 }
 
-// Event listeners for buttons
-document.getElementById('current-window').addEventListener('click', () => fetchTabs(true));
-document.getElementById('all-windows').addEventListener('click', () => fetchTabs(false));
+// Focus on the group name input when the popup opens
+function focusGroupNameInput() {
+  const groupNameInput = document.getElementById('group-name');
+  groupNameInput.focus();
+
+  // Add event listener to save on Enter key press
+  groupNameInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      saveTabsToJson();
+    }
+  });
+}
+
+// Populate tabs and focus on input when popup opens
+document.addEventListener('DOMContentLoaded', () => {
+  fetchCurrentWindowTabs();
+  focusGroupNameInput();
+});
+
+// Event listener for saving JSON
 document.getElementById('save-json').addEventListener('click', saveTabsToJson);
