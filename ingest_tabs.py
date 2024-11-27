@@ -1,10 +1,13 @@
+import glob
 import json
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
 from psycopg2.extras import execute_batch
 from send2trash import send2trash
-from database import connect_to_db
+
 import config
+from database import connect_to_db
 
 
 def run_applescript(applescript):
@@ -50,10 +53,6 @@ def parse_file(file_path):
     # Assume plain text format (list of URLs)
     urls = content.strip().splitlines()
     return [], [{"id": i + 1, "title": url, "url": url} for i, url in enumerate(urls)]
-
-
-import glob
-from pathlib import Path
 
 
 def ingest_file(file_path=None):
