@@ -15,11 +15,10 @@ def run_applescript(applescript):
 
 
 def open_urls(urls):
-    # subprocess.check_output(["git", "status"]
-    subprocess.run(
-        ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "--new-window"]
-        + urls
+    browsers = dict(
+        chrome="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
     )
+    subprocess.run([browsers[config.BROWSER], "--new-window"] + urls)
 
     run_applescript(
         """
