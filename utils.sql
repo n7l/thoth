@@ -1,12 +1,16 @@
 SELECT pg_size_pretty(pg_total_relation_size('email')) AS total_size;
 
--- Black Friday sales 2024
-WITH target_emails AS (
+-- Black Friday sales
+WITH params AS (
+    SELECT
+        '2024'::INTEGER AS target_year
+),
+target_emails AS (
     SELECT *
-    FROM email
+    FROM email, params
     WHERE concat(subject, body) ILIKE '%black friday%'
-      AND date > current_date - interval '1 year' -- Adjust dynamically
-      AND date < current_date
+      AND date >= make_date('2024'::INTEGER, 1, 1)
+      AND date <= make_date('2024'::INTEGER, 12, 31)
 )
 SELECT DISTINCT ON (sender_domain)
        concat('https://mail.google.com/mail/u/0/#inbox/', message_id) AS gmail_link,
