@@ -30,3 +30,15 @@ CREATE TABLE tab (
     favicon_url TEXT,
     group_id INTEGER REFERENCES tab_group(id) ON DELETE SET NULL
 );
+
+CREATE OR REPLACE VIEW tab_group_with_combined_tags AS
+SELECT
+    t.id,
+    array_agg(DISTINCT tag) AS tags
+FROM tab_group t,
+LATERAL (
+    SELECT unnest(t.tags) AS tag
+    UNION
+    SELECT unnest(string_to_array(t.name, ' ')) AS tag
+) combined_tags
+GROUP BY t.id;
