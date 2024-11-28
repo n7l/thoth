@@ -39,6 +39,6 @@ FROM tab_group t,
 LATERAL (
     SELECT unnest(t.tags) AS tag
     UNION
-    SELECT unnest(string_to_array(t.name, ' ')) AS tag
+    SELECT unnest(regexp_split_to_array(t.name, '\s+')) AS tag
 ) combined_tags
 GROUP BY t.id;
