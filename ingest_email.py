@@ -1,12 +1,13 @@
 import base64
+from email.utils import parsedate_to_datetime
 from pathlib import Path
+
+import psycopg2
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from psycopg2.extras import execute_values
-import psycopg2
-from email.utils import parsedate_to_datetime
 
 from database import connect_to_db
 
@@ -165,7 +166,7 @@ def save_emails_to_db_in_chunks(emails, chunk_size=100):
     conn.close()
 
 
-def main(since_date=None):
+def ingest_emails(since_date=None):
     """Main function to fetch and save emails incrementally."""
     service = authenticate()
     next_page_token = None
@@ -194,6 +195,4 @@ def main(since_date=None):
 
 
 if __name__ == "__main__":
-    # Specify a date in YYYY-MM-DD format to filter emails
-    SINCE_DATE = "1990-01-01"  # Example date
-    main(since_date=SINCE_DATE)
+    ingest_emails(since_date="1990-01-01")
