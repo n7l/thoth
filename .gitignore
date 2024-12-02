@@ -8,6 +8,8 @@ dist/
 wheels/
 *.egg-info
 
+.gitconfig
+
 # Virtual environments
 .venv
 

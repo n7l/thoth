@@ -46,7 +46,7 @@ function saveTabsToJson() {
 
   chrome.downloads.download({
     url: url,
-    filename: groupName ? `${groupName}_tabs.json` : 'tabs.json',
+    filename: groupName ? `tabs_${groupName}.json` : 'tabs.json',
     saveAs: true
   });
 }

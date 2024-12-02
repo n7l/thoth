@@ -57,9 +57,9 @@ def parse_file(file_path):
 def ingest_file(file_path=None):
     # If no file_path is specified, find all matching files in Downloads
     if file_path is None:
-        files = glob.glob("/Users/nat/Downloads/tabs*.json")
+        files = glob.glob("~/Downloads/tabs*.json")
         if not files:
-            print("No matching files found in /Users/nat/Downloads/")
+            print("No matching files found in ~/Downloads/")
             return
         files.sort()  # Sort to process files in order (optional)
     else:

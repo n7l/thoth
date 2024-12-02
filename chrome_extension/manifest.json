@@ -12,5 +12,11 @@
         "48": "pin-icon.png",
         "128": "pin-icon.png"
       }
-    }
+    },
+    "web_accessible_resources": [
+      {
+        "resources": ["*.json"],
+        "matches": ["<all_urls>"]
+      }
+    ]
   }
