@@ -1,5 +1,9 @@
 # thoth
 
+https://en.wikipedia.org/wiki/Thoth
+
+Thoth was the Egyptian God of wisdom, knowledge, writing, and other things. This is meant to be a central location for all my personal information.
+
 This is very hacked together and a work in progress
 
 Requires MacOS and works with Chrome only right now
