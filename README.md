@@ -27,6 +27,7 @@ Install python dependencies
 
 ```sh
 uv sync
+uv run pre-commit install
 ```
 
 Save some tabs with a name e.g. "work"
