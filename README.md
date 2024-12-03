@@ -51,3 +51,12 @@ TODO: a whole heck of a lot. Feel free to add things here
 - Auto-associate tabs with tags by domain name matches, etc
 - Blacklist urls or domains so they aren't saved and/or aren't opened
 
+## Optional
+
+Install fzf for interactive tab group opening
+
+```sh
+brew install uv fzf
+source aliases.sh
+```
+

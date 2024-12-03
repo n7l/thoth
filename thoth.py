@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import fire
 
-from database import search_emails
+from database import execute_query, search_emails
 from ingest_email import ingest_emails
 from ingest_tabs import ingest_file, open_tab_group
 
@@ -24,6 +24,10 @@ class Client:
 
     def black_friday(self):
         return search_emails("black friday", 2024)
+
+    def list(self):
+        results = execute_query("select name from tab_group;")
+        print("\n".join([row[0] for row in results]))
 
 
 if __name__ == "__main__":

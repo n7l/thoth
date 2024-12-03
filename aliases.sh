@@ -1,0 +1,1 @@
+alias tabs='uv run python thoth.py list | fzf | xargs -I {} uv run python thoth.py open "{}"'
