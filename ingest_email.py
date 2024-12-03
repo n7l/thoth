@@ -11,29 +11,17 @@ from psycopg2.extras import execute_values
 
 from database import connect_to_db
 
-# Define the scope
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
-# Define paths for credentials and tokens
 BASE_DIR = Path(__file__).resolve().parent
 CREDENTIALS_PATH = BASE_DIR / "credentials.json"
 TOKEN_PATH = BASE_DIR / "token.json"
-
-# Database connection details
-DB_CONFIG = {
-    "dbname": "thoth",
-    "user": "postgres",
-    "password": "postgres",
-    "host": "localhost",
-    "port": 5432,
-}
 
 
 def authenticate():
     """Authenticate and return the Gmail API service."""
     creds = None
     try:
-        # Check if token.json exists
         if TOKEN_PATH.exists():
             creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
 
@@ -54,7 +42,6 @@ def authenticate():
                 with TOKEN_PATH.open("w") as token_file:
                     token_file.write(creds.to_json())
 
-        # Return the Gmail service
         return build("gmail", "v1", credentials=creds)
 
     except Exception as e:
