@@ -1,4 +1,3 @@
-import glob
 import json
 import subprocess
 from pathlib import Path
@@ -57,7 +56,7 @@ def parse_file(file_path):
 def ingest_file(file_path=None):
     # If no file_path is specified, find all matching files in Downloads
     if file_path is None:
-        files = glob.glob("~/Downloads/tabs*.json")
+        files = list(Path("~/Downloads").expanduser().glob("tabs*.json"))
         if not files:
             print("No matching files found in ~/Downloads/")
             return
@@ -120,7 +119,7 @@ def ingest_file(file_path=None):
         conn.close()
 
         if not config.TEST_MODE:
-            send2trash(str(file_path))
+            send2trash(str(path))
 
         print(f"Ingested {len(tabs)} tabs and moved '{path}' to the trash.")
 

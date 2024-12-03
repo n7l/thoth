@@ -1,3 +1,3 @@
-TEST_MODE = True
+TEST_MODE = False
 
 BROWSER = "chrome"
