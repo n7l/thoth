@@ -17,7 +17,7 @@ brew install uv
 
 Create a postgres database that's locally accessible. I use https://postgresapp.com/
 
-The expected credentials are in `./database.py`
+The expected credentials are in `./database.py`. It uses port 5454 to hopefully avoid conflict with your other projects ;)
 
 Run the sql in `./schema.sql` to create the schema
 Note the commented out `CREATE DATABASE` command which you can run or otherwise create a `thoth` database
