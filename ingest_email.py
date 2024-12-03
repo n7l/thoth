@@ -1,52 +1,10 @@
 import base64
 from email.utils import parsedate_to_datetime
-from pathlib import Path
 
-from google.auth.exceptions import RefreshError
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
 from psycopg2.extras import execute_values
 
-from database import connect_to_db
-
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
-
-BASE_DIR = Path(__file__).resolve().parent
-CREDENTIALS_PATH = BASE_DIR / "credentials.json"
-TOKEN_PATH = BASE_DIR / "token.json"
-
-
-def authenticate():
-    """Authenticate and return the Gmail API service."""
-    creds = None
-    try:
-        if TOKEN_PATH.exists():
-            creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
-
-        # Refresh or re-authenticate as needed
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                try:
-                    creds.refresh(Request())
-                except RefreshError:
-                    print("Failed to refresh token. Re-authenticating...")
-                    creds = None
-            if not creds:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    str(CREDENTIALS_PATH), SCOPES
-                )
-                creds = flow.run_local_server(port=0)
-                # Save the credentials for future use
-                with TOKEN_PATH.open("w") as token_file:
-                    token_file.write(creds.to_json())
-
-        return build("gmail", "v1", credentials=creds)
-
-    except Exception as e:
-        print(f"Authentication failed: {e}")
-        raise
+from database import connect_to_db, execute_query
+from google_api import get_gmail_client
 
 
 def list_messages(service, user_id="me", page_token=None, since_date=None):
@@ -127,11 +85,8 @@ def get_message(service, msg_id, user_id="me"):
         return None
 
 
-def save_emails_to_db_in_chunks(emails, chunk_size=100):
-    """Save a list of emails to the database in manageable chunks and track inserts vs. updates."""
-    conn = connect_to_db()
-    cursor = conn.cursor()
-
+def save_emails(emails, chunk_size=100):
+    """Save a list of emails to the database in manageable chunks."""
     query = """
     INSERT INTO email (message_id, sender, recipient, subject, body, date, labels)
     VALUES %s
@@ -146,6 +101,8 @@ def save_emails_to_db_in_chunks(emails, chunk_size=100):
               CASE xmax WHEN 0 THEN 'inserted' ELSE 'updated' END AS operation;
     """
 
+    conn = connect_to_db()
+    cursor = conn.cursor()
     inserted_count = 0
     updated_count = 0
 
@@ -184,7 +141,7 @@ def save_emails_to_db_in_chunks(emails, chunk_size=100):
 
 def ingest_emails(since_date=None):
     """Main function to fetch and save emails incrementally."""
-    service = authenticate()
+    service = get_gmail_client()
     next_page_token = None
 
     while True:
@@ -202,47 +159,8 @@ def ingest_emails(since_date=None):
             if email_data:
                 emails.append(email_data)
 
-        print(emails[0]["date"])
-        save_emails_to_db_in_chunks(emails)
+        save_emails(emails)
 
         if not next_page_token:
             print("All emails processed.")
             break
-
-
-def black_friday():
-    query = """
-WITH target_emails AS (
-    SELECT *
-    FROM email
-    WHERE concat(subject, body) ILIKE %(search_term)s
-      AND date >= make_date(%(target_year)s::INTEGER, 1, 1)
-      AND date <= make_date(%(target_year)s::INTEGER, 12, 31)
-)
-SELECT DISTINCT ON (sender_domain)
-       concat('https://mail.google.com/mail/u/0/#inbox/', message_id) AS gmail_link,
-       *,
-       substring(sender FROM '@(.*)$') AS sender_domain
-FROM target_emails
-ORDER BY sender_domain, date DESC;
-
-"""
-
-    params = {
-        "search_term": "%black friday%",  # Match emails containing "black friday"
-        "target_year": 2024,  # Year to filter
-    }
-
-    conn = connect_to_db()
-    with conn.cursor() as cur:
-        cur.execute(query, params)
-        results = cur.fetchall()
-
-    for row in results:
-        print(row)
-
-    conn.close()
-
-
-if __name__ == "__main__":
-    ingest_emails(since_date="1990-01-01")

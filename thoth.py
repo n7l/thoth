@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 
 import fire
 
-from ingest_email import black_friday, ingest_emails
+from database import search_emails
+from ingest_email import ingest_emails
 from ingest_tabs import ingest_file, open_tab_group
 
 
@@ -22,7 +23,7 @@ class Client:
         return open_tab_group(group_name)
 
     def black_friday(self):
-        return black_friday()
+        return search_emails("black friday", 2024)
 
 
 if __name__ == "__main__":
