@@ -56,7 +56,7 @@ TODO: a whole heck of a lot. Feel free to add things here
 Install fzf for interactive tab group opening
 
 ```sh
-brew install uv fzf
+brew install fzf
 source aliases.sh
 ```
 
