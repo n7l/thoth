@@ -3,7 +3,6 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from psycopg2.extras import execute_batch
 from send2trash import send2trash
 
 import config
@@ -29,7 +28,6 @@ def open_urls(urls):
     )
 
 
-# Function to parse file content
 def parse_file(file_path):
     file_path = Path(file_path)
     with file_path.open("r") as f:
@@ -77,7 +75,6 @@ def ingest_file(file_path=None):
         print(f"Processing file: {path}")
         groups, tabs, saved_at = parse_file(path)
 
-        # Connect to the database and process tabs/groups
         conn = connect_to_db()
         cursor = conn.cursor()
 
@@ -96,7 +93,6 @@ def ingest_file(file_path=None):
 
         # Add tabs and associate with groups
         for tab in tabs:
-            # Insert or update the tab
             tab_query = """
             INSERT INTO tab (title, url, favicon_url)
             VALUES (%s, %s, %s)
@@ -111,10 +107,6 @@ def ingest_file(file_path=None):
 
             # Associate tab with groups
             group_name = tab.get("group")
-            # if not group_name:
-            #     group_name = groups.get(0).get("name")
-            # if not group_name:
-            #     group_name = file_path
             if group_name in group_ids:
                 tab_group_tab_query = """
                 INSERT INTO tab_group_tab (tab_id, group_id)
@@ -132,7 +124,6 @@ def ingest_file(file_path=None):
         print(f"Ingested {len(tabs)} tabs and moved '{path}' to the trash.")
 
 
-# Query all tabs and their groups
 def query_tabs_with_groups():
     conn = connect_to_db()
     cursor = conn.cursor()
@@ -181,16 +172,5 @@ def open_tab_group(group_name):
 if __name__ == "__main__":
     config.TEST_MODE = True
     config.TABS_LOCATION = "~/Downloads/tabs"
-    # import sys
 
-    # if len(sys.argv) < 2:
-    #     print("Usage: python script.py <path_to_tabs.json>")
-    #     sys.exit(1)
-
-    # file_path = sys.argv[1]
     ingest_file()
-
-    # print("\nTabs with their groups in the database:")
-    # query_tabs_with_groups()
-
-    # open_tab_group("music")

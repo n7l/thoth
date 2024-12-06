@@ -2,14 +2,14 @@
 
 DROP TABLE IF EXISTS emails;
 CREATE TABLE email (
-    id SERIAL PRIMARY KEY,             -- Unique ID for the email (auto-incremented)
+    id SERIAL PRIMARY KEY,
     message_id TEXT UNIQUE NOT NULL,   -- Unique message identifier from Gmail
-    sender TEXT,                       -- Email sender
-    recipient TEXT[],                  -- Array of recipients (To)
-    subject TEXT,                      -- Subject of the email
-    body TEXT,                         -- Email body
-    date TIMESTAMP WITH TIME ZONE,     -- Date and time of the email with timezone
-    labels TEXT[]                      -- Labels associated with the email (array)
+    sender TEXT,
+    recipient TEXT[],
+    subject TEXT,
+    body TEXT,
+    date TIMESTAMP WITH TIME ZONE,
+    labels TEXT[]
 );
 
 
@@ -18,7 +18,6 @@ DROP TABLE IF EXISTS tab_group_tab CASCADE;
 DROP TABLE IF EXISTS tab_group CASCADE;
 DROP TABLE IF EXISTS tab CASCADE;
 
--- Create `tab` table
 CREATE TABLE tab (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
@@ -28,7 +27,6 @@ CREATE TABLE tab (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create `tab_group` table
 CREATE TABLE tab_group (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
@@ -38,7 +36,6 @@ CREATE TABLE tab_group (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create `tab_group_tab` table to support many-to-many relationships
 CREATE TABLE tab_group_tab (
     id SERIAL PRIMARY KEY,
     tab_id INT NOT NULL REFERENCES tab(id) ON DELETE CASCADE,
@@ -47,7 +44,6 @@ CREATE TABLE tab_group_tab (
     UNIQUE(tab_id, group_id)
 );
 
--- Create a function to update `updated_at` column
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -56,13 +52,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Add triggers for the `tab` table
 CREATE TRIGGER set_updated_at_tab
 BEFORE UPDATE ON tab
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
 
--- Add triggers for the `tab_group` table
 CREATE TRIGGER set_updated_at_tab_group
 BEFORE UPDATE ON tab_group
 FOR EACH ROW

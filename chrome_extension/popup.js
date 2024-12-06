@@ -1,6 +1,5 @@
 let tabsData = [];
 
-// Fetch tabs from the current window automatically
 function fetchCurrentWindowTabs() {
   chrome.tabs.query({ currentWindow: true }, (tabs) => {
     tabsData = tabs.map(tab => ({
@@ -13,7 +12,6 @@ function fetchCurrentWindowTabs() {
   });
 }
 
-// Display tabs in the popup
 function displayTabs(tabs) {
   const tabsDiv = document.getElementById('tabs');
   tabsDiv.innerHTML = ''; // Clear previous results
@@ -43,16 +41,12 @@ function saveTabsToJson() {
       group: groupName || null
     }))
   };
-  // alert(JSON.stringify(jsonData));
 
   const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 
-  // alert(url);
-  // const filename = groupName? `tabs_${timestamp}_${groupName}.json` : `tabs_${timestamp}.json`;
   const filename = groupName? `tabs_${groupName}.json` : `tabs.json`;
 
-  // alert(filename);
   chrome.downloads.download({
     url,
     filename,
@@ -77,5 +71,4 @@ document.addEventListener('DOMContentLoaded', () => {
   focusGroupNameInput();
 });
 
-// Event listener for saving JSON
 document.getElementById('save-json').addEventListener('click', saveTabsToJson);
