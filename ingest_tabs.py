@@ -160,7 +160,8 @@ def open_tab_group(group_name):
     query = """
     SELECT t.url
     FROM tab t
-    JOIN tab_group g ON t.group_id = g.id
+    JOIN tab_group_tab tgt ON t.id = tgt.tab_id
+    JOIN tab_group g ON tgt.group_id = g.id
     WHERE g.name = %s
     """
     cursor.execute(query, (group_name,))
