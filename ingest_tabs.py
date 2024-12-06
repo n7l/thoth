@@ -1,5 +1,6 @@
 import json
 import subprocess
+from datetime import datetime
 from pathlib import Path
 
 from psycopg2.extras import execute_batch
@@ -39,7 +40,10 @@ def parse_file(file_path):
         data = json.loads(content)
         if isinstance(data, dict) and "tabs" in data:
             # JSON with tabs and groups
-            return data.get("groups", []), data["tabs"]
+            saved_at = data.get(
+                "timestamp", datetime.utcnow().isoformat()
+            )  # Use timestamp from JSON or default to now
+            return data.get("groups", []), data["tabs"], saved_at
         elif isinstance(data, list):
             # JSON with a list of URLs
             return [], [
@@ -56,11 +60,11 @@ def parse_file(file_path):
 def ingest_file(file_path=None):
     # If no file_path is specified, find all matching files in Downloads
     if file_path is None:
-        files = list(Path("~/Downloads").expanduser().glob("tabs*.json"))
+        files = list(Path(config.TABS_LOCATION).expanduser().glob("tabs*.json"))
         if not files:
-            print("No matching files found in ~/Downloads/")
+            print(f"No matching files found in {config.TABS_LOCATION}")
             return
-        files.sort()  # Sort to process files in order (optional)
+        # files.sort()  # Sort to process files in order (optional)
     else:
         files = [file_path]
 
@@ -71,48 +75,52 @@ def ingest_file(file_path=None):
             continue
 
         print(f"Processing file: {path}")
-        groups, tabs = parse_file(path)
+        groups, tabs, saved_at = parse_file(path)
 
         # Connect to the database and process tabs/groups
         conn = connect_to_db()
         cursor = conn.cursor()
 
-        # Insert or update groups
+        # Add groups
         group_ids = {}
-        if groups:
+        for group in groups:
             group_query = """
-            INSERT INTO tab_group (name, tags)
-            VALUES (%s, %s)
-            ON CONFLICT (name)
-            DO UPDATE SET tags = EXCLUDED.tags
+            INSERT INTO tab_group (name, tags, saved_at)
+            VALUES (%s, %s, %s)
             RETURNING id
             """
-            for group in groups:
-                cursor.execute(group_query, (group["name"], group.get("tags", [])))
-                group_ids[group["name"]] = cursor.fetchone()[0]
-
-        # Insert or update tabs
-        tab_query = """
-        INSERT INTO tab (tab_id, title, url, favicon_url, group_id)
-        VALUES (%s, %s, %s, %s, %s)
-        ON CONFLICT (tab_id)
-        DO UPDATE SET
-            title = EXCLUDED.title,
-            url = EXCLUDED.url,
-            favicon_url = EXCLUDED.favicon_url,
-            group_id = EXCLUDED.group_id
-        """
-        tab_data = [
-            (
-                tab["id"],
-                tab["title"],
-                tab["url"],
-                tab.get("favIconUrl"),
-                group_ids.get(tab.get("group")),
+            cursor.execute(
+                group_query, (group["name"], group.get("tags", []), saved_at)
             )
-            for tab in tabs
-        ]
-        execute_batch(cursor, tab_query, tab_data)
+            group_ids[group["name"]] = cursor.fetchone()[0]
+
+        # Add tabs and associate with groups
+        for tab in tabs:
+            # Insert or update the tab
+            tab_query = """
+            INSERT INTO tab (title, url, favicon_url)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (url)
+            DO UPDATE SET
+                title = EXCLUDED.title,
+                favicon_url = EXCLUDED.favicon_url
+            RETURNING id
+            """
+            cursor.execute(tab_query, (tab["title"], tab["url"], tab.get("favIconUrl")))
+            tab_id = cursor.fetchone()[0]
+
+            # Associate tab with groups
+            group_name = tab.get("group")
+            # if not group_name:
+            #     group_name = groups.get(0).get("name")
+            # if not group_name:
+            #     group_name = file_path
+            if group_name in group_ids:
+                tab_group_tab_query = """
+                INSERT INTO tab_group_tab (tab_id, group_id)
+                VALUES (%s, %s)
+                """
+                cursor.execute(tab_group_tab_query, (tab_id, group_ids[group_name]))
 
         conn.commit()
         cursor.close()
@@ -170,16 +178,18 @@ def open_tab_group(group_name):
 
 
 if __name__ == "__main__":
-    import sys
+    config.TEST_MODE = True
+    config.TABS_LOCATION = "~/Downloads/tabs"
+    # import sys
 
-    if len(sys.argv) < 2:
-        print("Usage: python script.py <path_to_tabs.json>")
-        sys.exit(1)
+    # if len(sys.argv) < 2:
+    #     print("Usage: python script.py <path_to_tabs.json>")
+    #     sys.exit(1)
 
-    file_path = sys.argv[1]
-    ingest_file(file_path)
+    # file_path = sys.argv[1]
+    ingest_file()
 
     # print("\nTabs with their groups in the database:")
     # query_tabs_with_groups()
 
-    open_tab_group("music")
+    # open_tab_group("music")

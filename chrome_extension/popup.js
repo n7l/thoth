@@ -30,7 +30,10 @@ function displayTabs(tabs) {
 // Save tabs and group (if provided) to a JSON file
 function saveTabsToJson() {
   const groupName = document.getElementById('group-name').value.trim();
+  const timestamp = new Date().toISOString();
+
   const jsonData = {
+    timestamp: timestamp,
     groups: groupName ? [{ name: groupName, tags: [] }] : [],
     tabs: tabsData.map(tab => ({
       id: tab.id,
@@ -40,17 +43,21 @@ function saveTabsToJson() {
       group: groupName || null
     }))
   };
+  // alert(JSON.stringify(jsonData));
 
   const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 
+  // alert(url);
+  // const filename = groupName? `tabs_${timestamp}_${groupName}.json` : `tabs_${timestamp}.json`;
+  const filename = groupName? `tabs_${groupName}.json` : `tabs.json`;
+
+  // alert(filename);
   chrome.downloads.download({
-    url: url,
-    filename: groupName ? `tabs_${groupName}.json` : 'tabs.json',
-    saveAs: true
+    url,
+    filename,
   });
 }
-
 // Focus on the group name input when the popup opens
 function focusGroupNameInput() {
   const groupNameInput = document.getElementById('group-name');
