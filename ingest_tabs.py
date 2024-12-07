@@ -38,9 +38,7 @@ def parse_file(file_path):
         data = json.loads(content)
         if isinstance(data, dict) and "tabs" in data:
             # JSON with tabs and groups
-            saved_at = data.get(
-                "timestamp", datetime.utcnow().isoformat()
-            )  # Use timestamp from JSON or default to now
+            saved_at = data.get("timestamp")
             return data.get("groups", []), data["tabs"], saved_at
         elif isinstance(data, list):
             # JSON with a list of URLs
@@ -77,23 +75,28 @@ def ingest_file(file_path=None):
 
         conn = connect_to_db()
         cursor = conn.cursor()
-
         # Add groups
         group_ids = {}
         for group in groups:
+            urls = [
+                tab.get("url") for tab in tabs if tab.get("group") == group.get("name")
+            ]
+            print("-" * 10)
+            print(group)
+            print(urls)
             group_query = """
-            INSERT INTO tab_group (name, tags, saved_at)
-            VALUES (%s, %s, %s)
+            INSERT INTO tab_group (name, tags, url_hash, saved_at)
+            VALUES (%s, %s, calculate_group_hash(%s), %s)
             RETURNING id
             """
             cursor.execute(
-                group_query, (group["name"], group.get("tags", []), saved_at)
+                group_query, (group["name"], group.get("tags", []), urls, saved_at)
             )
             group_ids[group["name"]] = cursor.fetchone()[0]
 
         # Add tabs and associate with groups
         for tab in tabs:
-            tab_query = """
+            tab_query = """ -- sql
             INSERT INTO tab (title, url, favicon_url)
             VALUES (%s, %s, %s)
             ON CONFLICT (url)
@@ -111,6 +114,7 @@ def ingest_file(file_path=None):
                 tab_group_tab_query = """
                 INSERT INTO tab_group_tab (tab_id, group_id)
                 VALUES (%s, %s)
+                ON CONFLICT DO NOTHING
                 """
                 cursor.execute(tab_group_tab_query, (tab_id, group_ids[group_name]))
 
@@ -152,8 +156,13 @@ def open_tab_group(group_name):
     SELECT t.url
     FROM tab t
     JOIN tab_group_tab tgt ON t.id = tgt.tab_id
-    JOIN tab_group g ON tgt.group_id = g.id
-    WHERE g.name = %s
+    WHERE tgt.group_id = (
+        SELECT id
+        from tab_group g
+        WHERE g.name = %s
+        ORDER BY g.saved_at DESC
+        limit 1
+    )
     """
     cursor.execute(query, (group_name,))
     rows = cursor.fetchall()

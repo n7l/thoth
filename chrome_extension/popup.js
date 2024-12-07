@@ -50,6 +50,8 @@ function saveTabsToJson() {
   chrome.downloads.download({
     url,
     filename,
+  }, () => {
+    window.close();
   });
 }
 // Focus on the group name input when the popup opens

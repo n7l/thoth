@@ -54,18 +54,13 @@ EXECUTE FUNCTION update_updated_at();
 
 
 -- Group hash
-DROP FUNCTION IF EXISTS calculate_group_hash;
-CREATE OR REPLACE FUNCTION calculate_group_hash(group_id_ INT) RETURNS TEXT AS $$
+CREATE OR REPLACE FUNCTION calculate_group_hash(urls TEXT[]) RETURNS TEXT AS $$
 DECLARE
     sorted_urls TEXT[];
     concatenated_urls TEXT;
 BEGIN
-    -- Fetch and sort the URLs
-    SELECT ARRAY_AGG(url ORDER BY url)
-    INTO sorted_urls
-    FROM tab
-    JOIN tab_group_tab tgt ON tab.id = tgt.tab_id
-    WHERE tgt.group_id = group_id_;
+    -- Sort the input URLs
+    sorted_urls := ARRAY(SELECT UNNEST(urls) ORDER BY 1);
 
     -- Concatenate the sorted URLs into a single string
     concatenated_urls := array_to_string(sorted_urls, '');
@@ -75,14 +70,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 CREATE OR REPLACE FUNCTION enforce_group_hash() RETURNS TRIGGER AS $$
 BEGIN
-    -- Calculate the hash for the group
-    NEW.url_hash := calculate_group_hash(NEW.id);
-
-    IF NEW.url_hash IS NULL THEN
-        -- NEW.url_hash = NEW.id;
-        RAISE EXCEPTION 'URL hash could not be calculated for group ID %', NEW.id;
+    -- Calculate the hash using the provided URLs (from NEW.urls column or similar)
+    IF NEW.urls IS NOT NULL THEN
+        NEW.url_hash := calculate_group_hash(NEW.urls);
+    ELSE
+        RAISE EXCEPTION 'No URLs provided for hash calculation';
     END IF;
 
     -- Ensure the hash is unique
@@ -94,9 +89,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
 CREATE TRIGGER set_url_hash
-AFTER INSERT OR UPDATE ON tab_group
+BEFORE UPDATE ON tab_group
 FOR EACH ROW
 EXECUTE FUNCTION enforce_group_hash();
 

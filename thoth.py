@@ -12,8 +12,7 @@ class Client:
     def ingest(self, file_path=None):
         return ingest_file(file_path)
 
-    def ingest_email(self, since=None, days=None):
-        days = days or 1
+    def ingest_email(self, since=None, days=1):
         if since is None:
             since_date = datetime.today() - timedelta(days=days)
             since = since_date.strftime("%Y-%m-%d")
@@ -25,8 +24,9 @@ class Client:
     def black_friday(self):
         return search_emails("black friday", 2024)
 
-    def list(self):
+    def list(self, unique=True):
         results = execute_query("select name from tab_group;")
+        results = list(set(results))
         print("\n".join([row[0] for row in results]))
 
 
