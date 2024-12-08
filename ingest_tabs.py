@@ -84,7 +84,7 @@ def ingest_file(file_path=None):
             print("-" * 10)
             print(group)
             print(urls)
-            group_query = """
+            group_query = """--sql
             INSERT INTO tab_group (name, tags, url_hash, saved_at)
             VALUES (%s, %s, calculate_group_hash(%s), %s)
             RETURNING id
@@ -112,11 +112,14 @@ def ingest_file(file_path=None):
             group_name = tab.get("group")
             if group_name in group_ids:
                 tab_group_tab_query = """
-                INSERT INTO tab_group_tab (tab_id, group_id)
-                VALUES (%s, %s)
+                INSERT INTO tab_group_tab (tab_id, group_id, position)
+                VALUES (%s, %s, %s)
                 ON CONFLICT DO NOTHING
                 """
-                cursor.execute(tab_group_tab_query, (tab_id, group_ids[group_name]))
+                position = tabs.index(tab)  # Preserve the order from JSON
+                cursor.execute(
+                    tab_group_tab_query, (tab_id, group_ids[group_name], position)
+                )
 
         conn.commit()
         cursor.close()
@@ -160,9 +163,10 @@ def open_tab_group(group_name):
         SELECT id
         from tab_group g
         WHERE g.name = %s
-        ORDER BY g.saved_at DESC
+        ORDER BY g.saved_at DESC NULLS LAST
         limit 1
     )
+    ORDER BY tgt.position ASC
     """
     cursor.execute(query, (group_name,))
     rows = cursor.fetchall()

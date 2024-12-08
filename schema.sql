@@ -30,6 +30,7 @@ CREATE TABLE tab_group_tab (
     id SERIAL PRIMARY KEY,
     tab_id INT NOT NULL REFERENCES tab(id) ON DELETE CASCADE,
     group_id INT NOT NULL REFERENCES tab_group(id) ON DELETE CASCADE,
+    position INT,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- When the tab was added to this group
     UNIQUE(tab_id, group_id)
 );
