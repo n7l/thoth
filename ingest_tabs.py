@@ -81,9 +81,9 @@ def ingest_file(file_path=None):
             urls = [
                 tab.get("url") for tab in tabs if tab.get("group") == group.get("name")
             ]
-            print("-" * 10)
-            print(group)
-            print(urls)
+            # print("-" * 10)
+            # print(group)
+            # print(urls)
             group_query = """--sql
             INSERT INTO tab_group (name, tags, url_hash, saved_at)
             VALUES (%s, %s, calculate_group_hash(%s), %s)
@@ -151,24 +151,42 @@ def query_tabs_with_groups():
     conn.close()
 
 
-def open_tab_group(group_name):
+def open_tab_group(group_name, merge=False):
     conn = connect_to_db()
     cursor = conn.cursor()
 
-    query = """
-    SELECT t.url
-    FROM tab t
-    JOIN tab_group_tab tgt ON t.id = tgt.tab_id
-    WHERE tgt.group_id = (
-        SELECT id
-        from tab_group g
-        WHERE g.name = %s
-        ORDER BY g.saved_at DESC NULLS LAST
-        limit 1
-    )
-    ORDER BY tgt.position ASC
-    """
-    cursor.execute(query, (group_name,))
+    # Adjust the query based on the `merge` parameter
+    if merge:
+        # Get all tab groups with a case-insensitive match for the name
+        query = """
+        SELECT t.url
+        FROM tab t
+        JOIN tab_group_tab tgt ON t.id = tgt.tab_id
+        WHERE tgt.group_id IN (
+            SELECT id
+            FROM tab_group g
+            WHERE LOWER(g.name) = LOWER(%s)
+        )
+        ORDER BY tgt.position ASC
+        """
+        cursor.execute(query, (group_name,))
+    else:
+        # Get only the most recent tab group with a case-insensitive match for the name
+        query = """
+        SELECT t.url
+        FROM tab t
+        JOIN tab_group_tab tgt ON t.id = tgt.tab_id
+        WHERE tgt.group_id = (
+            SELECT id
+            FROM tab_group g
+            WHERE LOWER(g.name) = LOWER(%s)
+            ORDER BY g.saved_at DESC NULLS LAST
+            LIMIT 1
+        )
+        ORDER BY tgt.position ASC
+        """
+        cursor.execute(query, (group_name,))
+
     rows = cursor.fetchall()
 
     if not rows:

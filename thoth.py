@@ -18,8 +18,8 @@ class Client:
             since = since_date.strftime("%Y-%m-%d")
         return ingest_emails(since)
 
-    def open(self, group_name):
-        return open_tab_group(group_name)
+    def open(self, group_name, merge=False):
+        return open_tab_group(group_name, merge)
 
     def black_friday(self):
         return search_emails("black friday", 2024)
