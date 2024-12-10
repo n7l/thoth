@@ -151,46 +151,73 @@ def query_tabs_with_groups():
     conn.close()
 
 
-def open_tab_group(group_name, merge=False):
+def open_tab_group(group_name=None, tags=None, merge=False):
     conn = connect_to_db()
     cursor = conn.cursor()
 
-    # Adjust the query based on the `merge` parameter
-    if merge:
-        # Get all tab groups with a case-insensitive match for the name
-        query = """
-        SELECT t.url
+    if tags:
+        formatted_tags = "ARRAY" + str(tags)
+        # Get all tab groups with a case-insensitive match for all tags
+        query = f"""
+        SELECT DISTINCT t.url
         FROM tab t
         JOIN tab_group_tab tgt ON t.id = tgt.tab_id
         WHERE tgt.group_id IN (
             SELECT id
-            FROM tab_group g
-            WHERE LOWER(g.name) = LOWER(%s)
+            FROM tab_group_with_combined_tags
+            WHERE tags @> {formatted_tags}
+            -- WHERE tags @> %s
+            -- WHERE tags @> ARRAY['ai', 'dev']
+            -- WHERE tags && %s
         )
-        ORDER BY tgt.position ASC
+        -- ORDER BY tgt.position, t.url ASC
         """
-        cursor.execute(query, (group_name,))
+
+        # cursor.execute(query, (tags,))
+
+        # print(cursor.mogrify(query, (formatted_tags,)).decode('utf-8'))
+
+        # cursor.execute(query, (formatted_tags,))
+        cursor.execute(query)
+
     else:
-        # Get only the most recent tab group with a case-insensitive match for the name
-        query = """
-        SELECT t.url
-        FROM tab t
-        JOIN tab_group_tab tgt ON t.id = tgt.tab_id
-        WHERE tgt.group_id = (
-            SELECT id
-            FROM tab_group g
-            WHERE LOWER(g.name) = LOWER(%s)
-            ORDER BY g.saved_at DESC NULLS LAST
-            LIMIT 1
-        )
-        ORDER BY tgt.position ASC
-        """
-        cursor.execute(query, (group_name,))
+
+        # Adjust the query based on the `merge` parameter
+        if merge:
+            # Get all tab groups with a case-insensitive match for the name
+            query = """
+            SELECT t.url
+            FROM tab t
+            JOIN tab_group_tab tgt ON t.id = tgt.tab_id
+            WHERE tgt.group_id IN (
+                SELECT id
+                FROM tab_group g
+                WHERE LOWER(g.name) = LOWER(%s)
+            )
+            ORDER BY tgt.position ASC
+            """
+            cursor.execute(query, (group_name,))
+        else:
+            # Get only the most recent tab group with a case-insensitive match for the name
+            query = """
+            SELECT t.url
+            FROM tab t
+            JOIN tab_group_tab tgt ON t.id = tgt.tab_id
+            WHERE tgt.group_id = (
+                SELECT id
+                FROM tab_group g
+                WHERE LOWER(g.name) = LOWER(%s)
+                ORDER BY g.saved_at DESC NULLS LAST
+                LIMIT 1
+            )
+            ORDER BY tgt.position ASC
+            """
+            cursor.execute(query, (group_name,))
 
     rows = cursor.fetchall()
 
     if not rows:
-        print(f"No tabs found for group '{group_name}'.")
+        print(f"No tabs found for group '{group_name}' and tags {tags}.")
         return
 
     print(f"Opening tabs for group '{group_name}':")

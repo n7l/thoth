@@ -18,15 +18,20 @@ class Client:
             since = since_date.strftime("%Y-%m-%d")
         return ingest_emails(since)
 
-    def open(self, group_name, merge=False):
-        return open_tab_group(group_name, merge)
+    def open(self, group_name=None, tags=None, merge=False):
+        return open_tab_group(group_name, tags, merge)
 
     def black_friday(self):
         return search_emails("black friday", 2024)
 
-    def list(self, unique=True):
-        results = execute_query("select name from tab_group;")
-        results = list(set(results))
+    def names(self):
+        results = execute_query("select distinct name from tab_group;")
+        print("\n".join([row[0] for row in results]))
+
+    def tags(self):
+        results = execute_query(
+            "SELECT DISTINCT unnest(tags) AS unique_tag FROM tab_group_with_combined_tags;"
+        )
         print("\n".join([row[0] for row in results]))
 
 
