@@ -64,8 +64,14 @@ source aliases.sh
 
 ## Examples
 
-Get the 10 most recently updated tabs
+Open the 10 most recently updated tabs
 
-```
+```sh
 uv run python thoth.py query 'select url from tab order by updated_at desc limit 10'
+```
+
+Open 3 random youtube videos you've saved
+
+```sh
+uv run python thoth.py query "select url from tab where url like '%youtube.com/watch%' order by random() limit 3"
 ```
