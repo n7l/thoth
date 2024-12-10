@@ -156,23 +156,18 @@ def open_tab_group(group_name=None, tags=None, merge=False):
     cursor = conn.cursor()
 
     if tags:
+        print("-" * 10 + "\nQuerying by tags is a work in progress\n" + "-" * 10)
         formatted_tags = "ARRAY" + str(tags)
         # Get all tab groups with a case-insensitive match for all tags
         query = f"""
         SELECT DISTINCT t.url
         FROM tab t
         JOIN tab_group_tab tgt ON t.id = tgt.tab_id
-        WHERE tgt.group_id IN (
-            SELECT id
-            FROM tab_group_with_combined_tags
-            WHERE tags @> {formatted_tags}
-            -- WHERE tags @> %s
-            -- WHERE tags @> ARRAY['ai', 'dev']
-            -- WHERE tags && %s
-        )
-        -- ORDER BY tgt.position, t.url ASC
+        JOIN tab_group_with_combined_tags g ON tgt.group_id = g.id
+        WHERE g.tags @> {formatted_tags}
         """
 
+        print(query)
         # cursor.execute(query, (tags,))
 
         # print(cursor.mogrify(query, (formatted_tags,)).decode('utf-8'))
