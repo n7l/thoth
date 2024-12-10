@@ -60,3 +60,12 @@ brew install fzf
 source aliases.sh
 ```
 
+
+
+## Examples
+
+Get the 10 most recently updated tabs
+
+```
+uv run python thoth.py query 'select url from tab order by updated_at desc limit 10'
+```

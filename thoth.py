@@ -4,7 +4,7 @@ import fire
 
 from database import execute_query, search_emails
 from ingest_email import ingest_emails
-from ingest_tabs import ingest_file, open_tab_group
+from ingest_tabs import ingest_file, open_tab_group, open_urls
 
 
 class Client:
@@ -33,6 +33,11 @@ class Client:
             "SELECT DISTINCT unnest(tags) AS unique_tag FROM tab_group_with_combined_tags;"
         )
         print("\n".join([row[0] for row in results]))
+
+    def query(self, sql):
+        results = execute_query(sql)
+        print(results)
+        open_urls([row[0] for row in results])
 
 
 if __name__ == "__main__":
