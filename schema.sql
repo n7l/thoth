@@ -108,3 +108,20 @@ LATERAL (
     SELECT unnest(regexp_split_to_array(t.name, '\s+')) AS tag
 ) combined_tags
 GROUP BY t.id;
+
+
+-- DROP VIEW combined_tags_per_url;
+CREATE OR REPLACE VIEW combined_tags_per_url AS
+SELECT
+    t.id,
+    t.url,
+    array_agg(DISTINCT tag) AS tags
+FROM
+    tab t
+JOIN
+    tab_group_tab tgt ON t.id = tgt.tab_id
+JOIN
+    tab_group_with_combined_tags g ON tgt.group_id = g.id,
+    LATERAL unnest(g.tags) AS tag
+GROUP BY
+    t.id, t.url;

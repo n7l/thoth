@@ -160,11 +160,9 @@ def open_tab_group(group_name=None, tags=None, merge=False):
         formatted_tags = "ARRAY" + str(tags)
         # Get all tab groups with a case-insensitive match for all tags
         query = f"""
-        SELECT DISTINCT t.url
-        FROM tab t
-        JOIN tab_group_tab tgt ON t.id = tgt.tab_id
-        JOIN tab_group_with_combined_tags g ON tgt.group_id = g.id
-        WHERE g.tags @> {formatted_tags}
+        SELECT DISTINCT url
+        FROM combined_tags_per_url
+        WHERE tags @> {formatted_tags}
         """
 
         print(query)
