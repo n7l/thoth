@@ -1,3 +1,4 @@
+import fnmatch
 import os
 import time
 from datetime import datetime, timedelta
@@ -23,8 +24,11 @@ class DownloadEventHandler(FileSystemEventHandler):
             return
 
         file_path = event.src_path
-        print(f"New file detected: {file_path}")
-        self.client.ingest(file_path)
+        filename = os.path.basename(file_path)
+
+        if fnmatch.fnmatch(filename, "tabs*.json"):
+            print(f"New file detected: {file_path}")
+            self.client.ingest(file_path)
 
 
 class Client:
