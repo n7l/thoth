@@ -58,11 +58,18 @@ Install fzf for interactive tab group opening
 ```sh
 brew install fzf
 source aliases.sh
+tabs
 ```
 
 
 
 ## Examples
+
+Watch for new files
+
+```sh
+uv run python thoth.py watch
+```
 
 Open the 10 most recently updated tabs
 
@@ -75,3 +82,10 @@ Open 3 random youtube videos you've saved
 ```sh
 uv run python thoth.py query "select url from tab where url like '%youtube.com/watch%' order by random() limit 3"
 ```
+
+## TODO
+
+- Treat youtube links with different time stamps as the same url?
+- Add a mechanism for "removing" tabs or a weight algorithm that discounts tabs that have been removed from later versions of the same group (meaning with the same name)
+
+

@@ -1,10 +1,30 @@
+import os
+import time
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import fire
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
+import config
 from database import execute_query, search_emails
 from ingest_email import ingest_emails
 from ingest_tabs import ingest_file, open_tab_group, open_urls
+
+
+class DownloadEventHandler(FileSystemEventHandler):
+    def __init__(self, client, ingest_directory):
+        self.client = client
+        self.ingest_directory = os.path.expanduser(ingest_directory)
+
+    def on_created(self, event):
+        if event.is_directory:
+            return
+
+        file_path = event.src_path
+        print(f"New file detected: {file_path}")
+        self.client.ingest(file_path)
 
 
 class Client:
@@ -38,6 +58,26 @@ class Client:
         results = execute_query(sql)
         print(results)
         open_urls([row[0] for row in results])
+
+    def watch(self, directory=None):
+        if not directory:
+            directory = Path(config.TABS_LOCATION)
+        directory = directory.expanduser()
+        if not directory.is_dir():
+            raise ValueError(f"Directory {directory} does not exist.")
+
+        event_handler = DownloadEventHandler(client=self, ingest_directory=directory)
+        observer = Observer()
+        observer.schedule(event_handler, directory, recursive=False)
+        observer.start()
+
+        print(f"Watching {directory} for new files. Press Ctrl+C to stop.")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            observer.stop()
+        observer.join()
 
 
 if __name__ == "__main__":
