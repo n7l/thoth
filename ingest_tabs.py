@@ -15,17 +15,28 @@ def run_applescript(applescript):
 
 def open_urls(urls):
     browsers = dict(
-        chrome="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        chrome=Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+        opera=Path("/Applications/Opera.app/Contents/MacOS/Opera"),
+        # TODO: safari doesn't work
+        safari=Path("/Applications/Safari.app/Contents/MacOS/Safari"),
     )
-    subprocess.run([browsers[config.BROWSER], "--new-window"] + urls)
+    browser = browsers[config.BROWSER]
 
-    run_applescript(
-        """
-    tell application "Google Chrome"
-        activate
-    end tell
-    """
-    )
+    subprocess.run([browser, "--new-window"] + urls)
+
+    try:
+        run_applescript(
+            f"""
+            tell application "{browser.name}"
+                activate
+            end tell
+            """
+        )
+    except Exception as e:
+        print(
+            f"Failed to activate {browser.name} with AppleScript. Are you running on an OS other than MacOS?"
+        )
+        print(e)
 
 
 def parse_file(file_path):
