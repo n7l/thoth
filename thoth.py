@@ -1,4 +1,5 @@
 import fnmatch
+import json
 import os
 import time
 from datetime import datetime, timedelta
@@ -64,6 +65,7 @@ class Client:
         open_urls([row[0] for row in results])
 
     def watch(self, directory=None):
+        self.ingest()
         if not directory:
             directory = Path(config.TABS_LOCATION)
         directory = directory.expanduser()
@@ -82,6 +84,22 @@ class Client:
         except KeyboardInterrupt:
             observer.stop()
         observer.join()
+
+    def load_file(self, file_path):
+        file_path = os.path.expanduser(file_path)
+        if not os.path.isfile(file_path):
+            raise ValueError(f"File {file_path} does not exist.")
+
+        with open(file_path, "r") as f:
+            data = json.load(f)
+
+        urls = [t.get("url") for t in data.get("tabs", [])]
+        if not urls:
+            print("No tabs found in the provided file.")
+            return
+
+        open_urls(urls)
+        print(f"Opened {len(urls)} tabs from {file_path}")
 
 
 if __name__ == "__main__":
