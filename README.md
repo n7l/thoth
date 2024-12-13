@@ -45,11 +45,6 @@ uv run python thoth.py ingest
 uv run python thoth.py open work
 ```
 
-TODO: a whole heck of a lot. Feel free to add things here
-
-- Open tabs by tag
-- Auto-associate tabs with tags by domain name matches, etc
-- Blacklist urls or domains so they aren't saved and/or aren't opened
 
 ## Optional
 
@@ -83,8 +78,10 @@ Open 3 random youtube videos you've saved
 uv run python thoth.py query "select url from tab where url like '%youtube.com/watch%' order by random() limit 3"
 ```
 
-## TODO
-
+## TODO - a whole heck of a lot. Feel free to add things here
+- Open tabs by tag (in progress, kind of working?)
+- Auto-associate tabs with tags by domain name matches, etc
+- Blacklist urls or domains so they aren't saved and/or aren't opened
 - Treat youtube links with different time stamps as the same url?
 - Add a mechanism for "removing" tabs or a weight algorithm that discounts tabs that have been removed from later versions of the same group (meaning with the same name)
 
